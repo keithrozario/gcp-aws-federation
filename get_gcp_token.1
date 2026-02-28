@@ -1,0 +1,34 @@
+.TH GET_GCP_TOKEN 1 "February 2026" "v1.0" "User Commands"
+.SH NAME
+get_gcp_token \- Fetches GCP OIDC ID token for AWS federation
+.SH SYNOPSIS
+.B get_gcp_token
+[\fIaudience\fR]
+.SH DESCRIPTION
+.B get_gcp_token
+is a utility designed to fetch an OIDC Identity Token from the Google Cloud Metadata Server. 
+It is primarily used to facilitate passwordless federation into AWS using IAM Roles for Service Accounts (IRSA) patterns on Compute Engine instances.
+
+The program first checks the \fBAWS_WEB_IDENTITY_TOKEN_FILE\fR environment variable for a target file path. If this variable is not set, it defaults to writing the token to \fB/tmp/gcp_oidc_token\fR.
+
+All status messages (success or error) are logged to standard output (stdout) or standard error (stderr) prefixed with an RFC3339 timestamp and a status indicator (SUCCESS/ERROR).
+.SH OPTIONS
+.TP
+.I audience
+The target audience (aud) for the token. Defaults to \fBsts.amazonaws.com\fR.
+.SH ENVIRONMENT
+.TP
+.B AWS_WEB_IDENTITY_TOKEN_FILE
+The file path where the fetched token will be written.
+.SH FILES
+.TP
+.I /run/user/<UID>/aws_gcp_token
+Recommended location for storing the token in memory (tmpfs) to ensure it does not hit physical disk. 
+.SH EXAMPLES
+.B get_gcp_token
+.RS
+Fetches a token for sts.amazonaws.com and writes it to the configured path.
+.RE
+.SH SEE ALSO
+.BR aws (1),
+.BR sts (1)
