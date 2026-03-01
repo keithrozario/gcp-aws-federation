@@ -1,0 +1,21 @@
+FROM ubuntu:latest
+
+# 1. Install necessary tools
+RUN apt-get update && apt-get install -y curl gpg ca-certificates --no-install-recommends
+
+# 2. Download and add the GPG key
+RUN curl -fsSL https://keithrozario.github.io/gcp-aws-federation/public.key | gpg --dearmor -o /usr/share/keyrings/gcp-aws-federation.gpg
+
+# 3. Add the APT repository
+RUN echo "deb [signed-by=/usr/share/keyrings/gcp-aws-federation.gpg] https://keithrozario.github.io/gcp-aws-federation stable main" | tee /etc/apt/sources.list.d/gcp-aws-federation.list
+
+# 4. Update and install the package
+RUN apt-get update && apt-get install -y get-gcp-token
+
+# 5. Verification
+# Ensure the binary is in the path and executable
+RUN which get_gcp_token && get_gcp_token --help
+
+# Set environment variable and run to see if it executes correctly
+ENV AWS_WEB_IDENTITY_TOKEN_FILE=/tmp/token
+ENTRYPOINT ["get_gcp_token"]
