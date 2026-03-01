@@ -68,3 +68,30 @@ jobs:
           docker run --rm \
             --add-host metadata.google.internal:127.0.0.1 \
             gcp-test-install
+
+  test-beta-install:
+    name: Verify Beta Install (RC Health)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Beta Install Test Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: testing/Dockerfile.apt
+          build-args: |
+            CHANNEL=beta
+          tags: gcp-test-beta-install
+          load: true
+          push: false
+
+      - name: Run Beta Install Test
+        run: |
+          docker run --rm \
+            --add-host metadata.google.internal:127.0.0.1 \
+            gcp-test-beta-install
