@@ -87,29 +87,41 @@ jobs:
 
       - name: Generate APT Repository
         run: |
-          # Use our existing script, but slightly modified behavior via environment variables if needed
-          # Or just call it directly since it looks for dist/*.deb
-          
           # Install dependencies for repo generation
           sudo apt-get update && sudo apt-get install -y dpkg-dev apt-utils
           
           # Run the generation script
-          # We need to ensure the script uses the imported GPG key
-          # The 'crazy-max/ghaction-import-gpg' action imports the key into the GPG keyring
-          
           chmod +x generate_repo.sh
           ./generate_repo.sh
           
-          # Move the generated repo to a 'public' folder for deployment
-          mkdir -p public
-          cp -r gcs-repo/* public/
+          # Determine Channel based on Tag
+          VERSION=${GITHUB_REF#refs/tags/v}
+          if [[ "$VERSION" == *"-rc"* ]]; then
+            echo "Release Candidate detected: $VERSION -> Channel: beta"
+            CHANNEL="beta"
+          else
+            echo "Stable Release detected: $VERSION -> Channel: stable"
+            CHANNEL="stable"
+          fi
           
-          # Also copy the public key to the root of the site
-          cp public.key public/
+          # Prepare public directory
+          mkdir -p public
+          
+          if [ "$CHANNEL" == "beta" ]; then
+            # Beta Release: Move to public/beta
+            mkdir -p public/beta
+            cp -r gcs-repo/* public/beta/
+            cp public.key public/beta/
+          else
+            # Stable Release: Move to public/ (root)
+            cp -r gcs-repo/* public/
+            cp public.key public/
+          fi
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./public
-          force_orphan: true # Keep the history clean on gh-pages branch
+          keep_files: true # Keep existing files (e.g. beta folder when deploying stable)
+          force_orphan: false

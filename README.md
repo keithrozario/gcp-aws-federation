@@ -31,6 +31,23 @@ sudo apt update
 sudo apt install get-gcp-token
 ```
 
+### Testing Beta Releases (Release Candidates)
+
+To test upcoming features, you can install from our beta channel. Note that these releases may be unstable.
+
+```bash
+# 1. Trust the GPG Key (Same as stable)
+curl -fsSL https://keithrozario.github.io/gcp-aws-federation/public.key | sudo gpg --dearmor -o /usr/share/keyrings/gcp-aws-federation.gpg
+
+# 2. Add the Beta Repository
+# Note the '/beta' suffix in the URL
+echo "deb [signed-by=/usr/share/keyrings/gcp-aws-federation.gpg] https://keithrozario.github.io/gcp-aws-federation/beta stable main" | sudo tee /etc/apt/sources.list.d/gcp-aws-federation-beta.list
+
+# 3. Install
+sudo apt update
+sudo apt install get-gcp-token
+```
+
 ### 2. Configure Cron Job
 
 Set up a cron job to renew the token every 12 minutes. This ensures a valid token is always available for the AWS SDKs.
