@@ -15,23 +15,29 @@ The solution consists of a Go-based binary that runs as a background task (via C
 
 ## Setup
 
-### 1. Install the Binary
+### 1. Install via APT
 
-Compile and move the Go binary to your system path:
+The easiest way to install is via our APT repository (hosted on GitHub Pages).
 
 ```bash
-go build -o get_gcp_token get_gcp_token.go
-sudo cp get_gcp_token /usr/local/bin/get_gcp_token
-sudo chmod +x /usr/local/bin/get_gcp_token
+# 1. Trust the GPG Key
+curl -fsSL https://keithrozario.github.io/gcp-aws-federation/public.key | sudo gpg --dearmor -o /usr/share/keyrings/gcp-aws-federation.gpg
+
+# 2. Add the Repository
+echo "deb [signed-by=/usr/share/keyrings/gcp-aws-federation.gpg] https://keithrozario.github.io/gcp-aws-federation stable main" | sudo tee /etc/apt/sources.list.d/gcp-aws-federation.list
+
+# 3. Install
+sudo apt update
+sudo apt install get-gcp-token
 ```
 
 ### 2. Configure Cron Job
 
-Set up a cron job to renew the token every 12 minutes. This ensures a valid token is always available for the AWS SDKs to use when they need to refresh credentials.
+Set up a cron job to renew the token every 12 minutes. This ensures a valid token is always available for the AWS SDKs.
 
 **Enable Lingering**
 
-To allow the cron job to run when you are not logged in, enable lingering for your user:
+To allow the cron job to run when you are not logged in (critical for background processes), enable lingering:
 
 ```bash
 loginctl enable-linger $USER
@@ -40,18 +46,18 @@ loginctl enable-linger $USER
 Run `crontab -e` and add:
 
 ```bash
-# Replace 15774312 with your actual UID (find it using 'id -u')
-*/12 * * * * AWS_WEB_IDENTITY_TOKEN_FILE=/run/user/15774312/aws_gcp_token /usr/local/bin/get_gcp_token
+# Replace 1000 with your actual UID (find it using 'id -u')
+# The tool defaults to writing to /run/user/<UID>/aws_gcp_token
+*/12 * * * * /usr/local/bin/get_gcp_token
 ```
-
-Storing the token in `/run/user/<UID>/` (a `tmpfs` RAM-based filesystem) ensures the token never hits the physical disk and is only accessible by your user.
 
 ### 3. Environment Variables
 
-Add the following to your shell configuration (e.g., `~/.zshrc` or `~/.bashrc`):
+Add the following to your shell configuration (e.g., `~/.zshrc` or `~/.bashrc`) so AWS SDKs can find the token:
 
 ```bash
-export AWS_WEB_IDENTITY_TOKEN_FILE=/run/user/15774312/aws_gcp_token
+# Point to the location where the cron job writes the token
+export AWS_WEB_IDENTITY_TOKEN_FILE=/run/user/$(id -u)/aws_gcp_token
 export AWS_ROLE_ARN=arn:aws:iam::941052394956:role/GCPFederation
 export AWS_DEFAULT_REGION=ap-southeast-1
 ```
