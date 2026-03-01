@@ -14,4 +14,3 @@ get_gcp_token
 build/
 dist/
 gcs-repo/
-testing/
