@@ -1,0 +1,23 @@
+FROM golang:1.24 AS builder
+
+WORKDIR /app
+COPY src/get_gcp_token.go .
+# Build statically linked binary
+RUN CGO_ENABLED=0 GOOS=linux go build -o get_gcp_token get_gcp_token.go
+
+FROM ubuntu:latest
+
+# 1. Install runtime dependencies for mock server
+RUN apt-get update && apt-get install -y python3 iputils-ping ca-certificates --no-install-recommends
+
+# 2. Copy binary from builder
+COPY --from=builder /app/get_gcp_token /usr/local/bin/get_gcp_token
+
+# 3. Setup Mock Environment
+WORKDIR /app
+COPY testing/mock_metadata.py /app/mock_metadata.py
+COPY testing/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+# 4. Run via Entrypoint
+ENTRYPOINT ["/app/entrypoint.sh"]
