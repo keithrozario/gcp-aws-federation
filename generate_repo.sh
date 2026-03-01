@@ -2,7 +2,7 @@
 set -e
 
 REPO_ROOT="gcs-repo"
-DIST_CODENAME="stable"
+DIST_CODENAME=${DIST_CODENAME:-stable}
 COMPONENT="main"
 ARCHS=("amd64" "arm64")
 
@@ -53,27 +53,6 @@ do_hash() {
 do_hash "MD5Sum" "md5sum"
 do_hash "SHA1" "sha1sum"
 do_hash "SHA256" "sha256sum"
-
-# Sign Release file
-# We need a GPG key. If one doesn't exist, generate a temporary one for this demo.
-if ! gpg --list-keys "GCP-AWS-Federation" > /dev/null 2>&1; then
-    echo "Generating temporary GPG key for signing..."
-    cat > gpg-batch <<EOF
-%echo Generating a basic OpenPGP key
-Key-Type: RSA
-Key-Length: 2048
-Subkey-Type: RSA
-Subkey-Length: 2048
-Name-Real: GCP AWS Federation
-Name-Email: build@example.com
-Expire-Date: 0
-%no-protection
-%commit
-%echo done
-EOF
-    gpg --batch --gen-key gpg-batch
-    rm gpg-batch
-fi
 
 echo "Signing Release file..."
 gpg --default-key "GCP AWS Federation" -abs -o Release.gpg Release
