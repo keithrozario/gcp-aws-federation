@@ -1,7 +1,7 @@
 FROM ubuntu:latest
 
-# 1. Install necessary tools
-RUN apt-get update && apt-get install -y curl gpg ca-certificates --no-install-recommends
+# 1. Install necessary tools and Python for mocking
+RUN apt-get update && apt-get install -y curl gpg ca-certificates python3 iputils-ping --no-install-recommends
 
 # 2. Download and add the GPG key
 RUN curl -fsSL https://keithrozario.github.io/gcp-aws-federation/public.key | gpg --dearmor -o /usr/share/keyrings/gcp-aws-federation.gpg
@@ -12,10 +12,11 @@ RUN echo "deb [signed-by=/usr/share/keyrings/gcp-aws-federation.gpg] https://kei
 # 4. Update and install the package
 RUN apt-get update && apt-get install -y get-gcp-token
 
-# 5. Verification
-# Ensure the binary is in the path and executable
-RUN which get_gcp_token && get_gcp_token --help
+# 5. Setup Mock Environment
+WORKDIR /app
+COPY testing/mock_metadata.py /app/mock_metadata.py
+COPY testing/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
-# Set environment variable and run to see if it executes correctly
-ENV AWS_WEB_IDENTITY_TOKEN_FILE=/tmp/token
-ENTRYPOINT ["get_gcp_token"]
+# 6. Run via Entrypoint
+ENTRYPOINT ["/app/entrypoint.sh"]
