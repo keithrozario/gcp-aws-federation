@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/user"
 	"path/filepath"
 	"time"
 )
@@ -12,7 +13,7 @@ import (
 const (
 	// DefaultAudience is the audience we established works with your AWS setup
 	DefaultAudience = "sts.amazonaws.com"
-	
+
 	// MetadataURL is the endpoint to get the ID token
 	MetadataURL = "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity"
 )
@@ -24,25 +25,49 @@ func main() {
 	}
 
 	// 1. Determine output file path
+	uid := os.Getuid()
+	defaultPath := fmt.Sprintf("/run/user/%d/aws_gcp_token", uid)
+
 	outputFile := os.Getenv("AWS_WEB_IDENTITY_TOKEN_FILE")
 	if outputFile == "" {
-		outputFile = "/tmp/gcp_oidc_token"
+		outputFile = defaultPath
 	}
 
-	// 2. Fetch Token
+	// 2. Check for Linger (Warning only)
+	checkLinger()
+
+	// 3. Fetch Token
 	token, err := fetchToken(audience)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: ERROR: Error fetching token: %v\n", time.Now().Format(time.RFC3339), err)
 		os.Exit(1)
 	}
 
-	// 3. Write to file atomically
+	// 4. Write to file atomically
 	if err := atomicWriteFile(outputFile, token); err != nil {
 		fmt.Fprintf(os.Stderr, "%s: ERROR: Error writing to file: %v\n", time.Now().Format(time.RFC3339), err)
 		os.Exit(1)
 	}
 
-	fmt.Printf("%s: SUCCESS: Successfully wrote token to %s\n", time.Now().Format(time.RFC3339), outputFile)
+	// 5. Output for shell evaluation and logs to stderr
+	fmt.Fprintf(os.Stderr, "%s: SUCCESS: Successfully wrote token to %s\n", time.Now().Format(time.RFC3339), outputFile)
+	fmt.Printf("export AWS_WEB_IDENTITY_TOKEN_FILE=%s\n", outputFile)
+}
+
+func checkLinger() {
+	currUser, err := user.Current()
+	if err != nil {
+		return
+	}
+
+	lingerPath := filepath.Join("/var/lib/systemd/linger", currUser.Username)
+	if _, err := os.Stat(lingerPath); os.IsNotExist(err) {
+		// Only warn if we are on a system that likely uses systemd
+		if _, err := os.Stat("/var/lib/systemd"); err == nil {
+			fmt.Fprintf(os.Stderr, "%s: WARNING: Linger is not enabled for user %s. Background cron jobs may fail to access /run/user. Run 'loginctl enable-linger %s' to fix.\n",
+				time.Now().Format(time.RFC3339), currUser.Username, currUser.Username)
+		}
+	}
 }
 
 func fetchToken(audience string) (string, error) {
@@ -86,29 +111,30 @@ func fetchToken(audience string) (string, error) {
 func atomicWriteFile(filename string, data string) error {
 	// Create a temporary file in the same directory
 	dir := filepath.Dir(filename)
-	// If the file is in /tmp, ensure the directory exists (it should), but generic safety:
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		return fmt.Errorf("directory %s does not exist", dir)
+	// Ensure the directory exists
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		return fmt.Errorf("failed to create directory %s: %v", dir, err)
 	}
 
+	// CreateTemp creates files with 0600 permissions by default
 	tmpFile, err := os.CreateTemp(dir, "token-*.tmp")
 	if err != nil {
 		return err
 	}
-	defer os.Remove(tmpFile.Name()) // Clean up if something goes wrong before rename
+	defer os.Remove(tmpFile.Name())
 
 	// Write data
 	if _, err := tmpFile.WriteString(data); err != nil {
 		tmpFile.Close()
 		return err
 	}
-	
+
 	// Ensure data is on disk
 	if err := tmpFile.Sync(); err != nil {
 		tmpFile.Close()
 		return err
 	}
-	
+
 	if err := tmpFile.Close(); err != nil {
 		return err
 	}
@@ -116,3 +142,4 @@ func atomicWriteFile(filename string, data string) error {
 	// Atomic rename
 	return os.Rename(tmpFile.Name(), filename)
 }
+
