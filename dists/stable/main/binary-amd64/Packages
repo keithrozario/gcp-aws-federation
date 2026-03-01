@@ -1,14 +1,14 @@
 Package: get-gcp-token
-Version: 1.0.0
+Version: 1.1.0
 Architecture: amd64
 Maintainer: Keith Krozario <keith.krozario@altostrat.com>
 Installed-Size: 8160
 Depends: libc6 (>= 2.17)
-Filename: pool/main/get-gcp-token_1.0.0_amd64.deb
-Size: 4301426
-MD5sum: 85f8d1a792c2e64cded9571ad94d0696
-SHA1: 65908429331172a85550aa40ed0b36a32a7c56fe
-SHA256: bad0b390f14e8dab79f774e5743ab936bb4ef7a8e3d02d5a181d95b47f4618b0
+Filename: pool/main/get-gcp-token_1.1.0_amd64.deb
+Size: 4301392
+MD5sum: bbfc6a5ee0b6c4f0a70b20be4ab0e978
+SHA1: 69893c27d06f3604d3470a47c655ec879fe9e108
+SHA256: 77dfa6a8a6a416f81d1acccf8eab53460cffc1cf6b056e3cdc91155e42d82c99
 Section: utils
 Priority: optional
 Homepage: https://github.com/keithrozario/gcp-aws-federation
