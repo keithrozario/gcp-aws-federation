@@ -55,8 +55,8 @@ jobs:
             go build -o "${OUTPUT_DIR}/usr/local/bin/${BINARY_NAME}" src/get_gcp_token.go
             
             # Copy Man Page (ensure it exists or create dummy/placeholder if missing)
-            if [ -f "get_gcp_token.1" ]; then
-              cp get_gcp_token.1 "${OUTPUT_DIR}/usr/share/man/man1/"
+            if [ -f "docs/get_gcp_token.1" ]; then
+              cp docs/get_gcp_token.1 "${OUTPUT_DIR}/usr/share/man/man1/"
               gzip "${OUTPUT_DIR}/usr/share/man/man1/get_gcp_token.1"
             else
               echo "Warning: Man page get_gcp_token.1 not found."
@@ -91,8 +91,8 @@ jobs:
           sudo apt-get update && sudo apt-get install -y dpkg-dev apt-utils
           
           # Run the generation script
-          chmod +x generate_repo.sh
-          ./generate_repo.sh
+          chmod +x build/generate_repo.sh
+          ./build/generate_repo.sh
           
           # Determine Channel based on Tag
           VERSION=${GITHUB_REF#refs/tags/v}

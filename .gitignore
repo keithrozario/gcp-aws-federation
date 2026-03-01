@@ -1,7 +1,8 @@
 # Python-generated files
 __pycache__/
 *.py[oc]
-build/
+build/*
+!build/generate_repo.sh
 dist/
 wheels/
 *.egg-info
@@ -11,6 +12,5 @@ wheels/
 # binary
 get_gcp_token 
 
-build/
 dist/
 gcs-repo/

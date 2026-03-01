@@ -7,7 +7,8 @@ RUN apt-get update && apt-get install -y curl gpg ca-certificates python3 iputil
 RUN curl -fsSL https://keithrozario.github.io/gcp-aws-federation/public.key | gpg --dearmor -o /usr/share/keyrings/gcp-aws-federation.gpg
 
 # 3. Add the APT repository
-RUN echo "deb [signed-by=/usr/share/keyrings/gcp-aws-federation.gpg] https://keithrozario.github.io/gcp-aws-federation stable main" | tee /etc/apt/sources.list.d/gcp-aws-federation.list
+ARG CHANNEL=stable
+RUN echo "deb [signed-by=/usr/share/keyrings/gcp-aws-federation.gpg] https://keithrozario.github.io/gcp-aws-federation ${CHANNEL} main" | tee /etc/apt/sources.list.d/gcp-aws-federation.list
 
 # 4. Update and install the package
 RUN apt-get update && apt-get install -y get-gcp-token
