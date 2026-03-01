@@ -1,0 +1,24 @@
+Origin: GCP AWS Federation
+Label: GCP-AWS-Federation
+Suite: stable
+Codename: stable
+Version: 1.0
+Architectures: amd64 arm64
+Components: main
+Description: GCP to AWS Federation Tools
+Date: Sun, 01 Mar 2026 03:32:56 +0000
+MD5Sum:
+ c571c0d2518dcb50c973aeaf26b6e4fd 444 main/binary-arm64/Packages.gz
+ 95d227a93b0090e41f14ab9d0520b6a5 606 main/binary-arm64/Packages
+ ad94fbfd679e623a92d2d24892b63eac 445 main/binary-amd64/Packages.gz
+ 68d6b7f0bbc1bc18b5939f376d186245 606 main/binary-amd64/Packages
+SHA1:
+ ca78f4c7c77341889a4873f072e1e5414e0225f9 444 main/binary-arm64/Packages.gz
+ 449e7bfb430593ab3714d9e451bbcb782810651f 606 main/binary-arm64/Packages
+ 934b996657a16977b50c0546efb0ed7f044fa37b 445 main/binary-amd64/Packages.gz
+ dbc587a111f14c1f30005478e4b3793dbba5afff 606 main/binary-amd64/Packages
+SHA256:
+ 6d66a5d05fe6242c46ee7e5ce6675e47459d093e96eabe19a52ec83594820992 444 main/binary-arm64/Packages.gz
+ 064c3f29d408a616a5e62fa6f88d154b5c52ece03fa474b83866f023699c9dd5 606 main/binary-arm64/Packages
+ 26152ef3eb87f5623a2467e9511fba34635820a39e687e7709c8430156bb478d 445 main/binary-amd64/Packages.gz
+ 7134dc5e411b3d133a58ae0ac1dfef6c32500b2125b7013678767ab9d8c42be5 606 main/binary-amd64/Packages

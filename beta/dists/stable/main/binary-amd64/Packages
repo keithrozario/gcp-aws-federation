@@ -1,0 +1,17 @@
+Package: get-gcp-token
+Version: 1.1.0-rc1
+Architecture: amd64
+Maintainer: Keith Krozario <keith.krozario@altostrat.com>
+Installed-Size: 8160
+Depends: libc6 (>= 2.17)
+Filename: pool/main/get-gcp-token_1.1.0-rc1_amd64.deb
+Size: 4301336
+MD5sum: 857ee75337167faa94270a79aed52281
+SHA1: f850fe2d9ebd22f9e63195f2ee6fe47c8a800000
+SHA256: 7b7c11025103e1b6a8ed17584375b396a9d9ecf559d18ff025446ec300586e5f
+Section: utils
+Priority: optional
+Homepage: https://github.com/keithrozario/gcp-aws-federation
+Description: GCP-AWS Federation Token Fetcher
+ Fetches OIDC ID tokens from GCP Metadata Server for AWS Federation.
+
