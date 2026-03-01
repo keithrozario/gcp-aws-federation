@@ -1,0 +1,115 @@
+name: Release to GitHub Pages
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Import GPG Key
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Build Binaries (Matrix Strategy)
+        shell: bash
+        run: |
+          mkdir -p build
+          
+          # Define architectures
+          ARCHS=("amd64" "arm64")
+          APP_NAME="get-gcp-token"
+          # Extract version from tag (e.g., v1.0.0 -> 1.0.0)
+          VERSION=${GITHUB_REF#refs/tags/v}
+          
+          for ARCH in "${ARCHS[@]}"; do
+            echo "Building for linux/${ARCH}..."
+            export CGO_ENABLED=0
+            export GOOS=linux
+            export GOARCH=${ARCH}
+            
+            OUTPUT_DIR="build/${APP_NAME}_${VERSION}_${ARCH}"
+            BINARY_NAME="get_gcp_token"
+            
+            mkdir -p "${OUTPUT_DIR}/usr/local/bin"
+            mkdir -p "${OUTPUT_DIR}/usr/share/man/man1"
+            mkdir -p "${OUTPUT_DIR}/DEBIAN"
+            
+            go build -o "${OUTPUT_DIR}/usr/local/bin/${BINARY_NAME}" src/get_gcp_token.go
+            
+            # Copy Man Page (ensure it exists or create dummy/placeholder if missing)
+            if [ -f "get_gcp_token.1" ]; then
+              cp get_gcp_token.1 "${OUTPUT_DIR}/usr/share/man/man1/"
+              gzip "${OUTPUT_DIR}/usr/share/man/man1/get_gcp_token.1"
+            else
+              echo "Warning: Man page get_gcp_token.1 not found."
+            fi
+            
+            # Create Control File
+            INSTALLED_SIZE=$(du -s "${OUTPUT_DIR}/usr" | cut -f1)
+            
+            cat <<EOF > "${OUTPUT_DIR}/DEBIAN/control"
+          Package: ${APP_NAME}
+          Version: ${VERSION}
+          Section: utils
+          Priority: optional
+          Architecture: ${ARCH}
+          Depends: libc6 (>= 2.17)
+          Maintainer: Keith Krozario <keith.krozario@altostrat.com>
+          Description: GCP-AWS Federation Token Fetcher
+           Fetches OIDC ID tokens from GCP Metadata Server for AWS Federation.
+          Homepage: https://github.com/${{ github.repository }}
+          Installed-Size: ${INSTALLED_SIZE}
+          EOF
+          
+            # Build .deb Package
+            mkdir -p dist
+            dpkg-deb --build "${OUTPUT_DIR}" "dist/${APP_NAME}_${VERSION}_${ARCH}.deb"
+            echo "Created dist/${APP_NAME}_${VERSION}_${ARCH}.deb"
+          done
+
+      - name: Generate APT Repository
+        run: |
+          # Use our existing script, but slightly modified behavior via environment variables if needed
+          # Or just call it directly since it looks for dist/*.deb
+          
+          # Install dependencies for repo generation
+          sudo apt-get update && sudo apt-get install -y dpkg-dev apt-utils
+          
+          # Run the generation script
+          # We need to ensure the script uses the imported GPG key
+          # The 'crazy-max/ghaction-import-gpg' action imports the key into the GPG keyring
+          
+          chmod +x generate_repo.sh
+          ./generate_repo.sh
+          
+          # Move the generated repo to a 'public' folder for deployment
+          mkdir -p public
+          cp -r gcs-repo/* public/
+          
+          # Also copy the public key to the root of the site
+          cp public.key public/
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          force_orphan: true # Keep the history clean on gh-pages branch
