@@ -68,7 +68,7 @@ export AWS_ROLE_ARN=<AWS_IAM_ROLE_ARN>
 gcloud iam service-accounts describe <SA_EMAIL> --format="value(uniqueId)"
 ```
 
-This retrieves the service account ID that will be important later.
+This retrieves the service account ID that will be important later. We will refer to this as the SA_ACCOUNT_ID
 
 ## Setup (on AWS)
 
@@ -105,9 +105,9 @@ Example Trust Policy:
             "Action": "sts:AssumeRoleWithWebIdentity",
             "Condition": {
                 "StringEquals": {
-                    "accounts.google.com:aud": "107806444890271851399",
+                    "accounts.google.com:aud": "<SA_ACCOUNT_ID>",
                     "accounts.google.com:oaud": "sts.amazonaws.com",
-                    "accounts.google.com:sub": "107806444890271851399"
+                    "accounts.google.com:sub": "<SA_ACCOUNT_ID>"
                 }
             }
         }
